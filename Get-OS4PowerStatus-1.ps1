@@ -26,6 +26,7 @@ foreach ($Panne in $Global:HydroData.pannes)
 {
     if (($Panne[4] -like "$Global:OS4Latitude") -and ($Panne[4] -like "$Global:OS4Longitude"))
     {
+
         if ($Panne[3] -is 'P')
         {
             $Global:PanneID = $Panne[9]
@@ -51,10 +52,18 @@ foreach ($Panne in $Global:HydroData.pannes)
                 Default { $Global:PanneRaisonString = "Inconnue" }
             }
 
-            $Global:PanneCompleteData = New-Object -TypeName pscustomobject -Property @{id=$Global:PanneID;startdatetime=$Global:PanneStartTime;eta=$Global:PanneEndETATime;status=$Global:PanneStatusString;cause=$Global:PanneRaisonString}
+            $Global:PanneCompleteData = New-Object -TypeName pscustomobject -Property @{'ID Panne'=$Global:PanneID;'Date de debut'=$Global:PanneStartTime;'ETA de fin'=$Global:PanneEndETATime;'Statut actuel'=$Global:PanneStatusString;'Cause de la panne'=$Global:PanneRaisonString}
             $Global:PanneCompleteDataCSV = ConvertTo-Csv -InputObject $Global:PanneCompleteData -Delimiter ';'
-            $Global:PanneCompleteDataOutput = New-Item -Path './outages' -Name "$Global:currentFileTime.csv" -ItemType File -Value $Global:PanneCompleteDataCSV -Force
+            New-Item -Path './outages' -Name "$Global:currentFileTime.csv" -ItemType File -Value $Global:PanneCompleteDataCSV -Force
         }
 
     }
+
+    else
+    {
+        $Global:PanneCompleteData = New-Object -TypeName pscustomobject -Property @{'ID Panne'='Pas de panne en cours pour OS4MTL'}
+        $Global:PanneCompleteDataCSV = ConvertTo-Csv -InputObject $Global:PanneCompleteData -Delimiter ';'
+        New-Item -Path './outages' -Name "$Global:currentFileTime.csv" -ItemType File -Value $Global:PanneCompleteDataCSV -Force
+    }
+
 }
