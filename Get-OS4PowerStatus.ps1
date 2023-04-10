@@ -55,8 +55,8 @@ foreach ($Global:Panne in $Global:HydroData.pannes)
             $Global:PanneCompleteData = @($Global:PanneID,$Global:PanneStartTime,$Global:PanneEndETATime,$Global:PanneStatusString,$Global:PanneRaisonString)
             Copy-Item -Path './outages/template.csv' -Destination "./outages/$Global:currentFileTime.csv" -Force
             $Global:PanneCSV = Get-Item -Path "./outages/$Global:currentFileTime.csv"
-            Add-Content -Path $Global:PanneCSV -Value "`r`n" -Force
-            Add-Content -Path $Global:PanneCSV -Value $Global:PanneCompleteData[0]+";"+$Global:PanneCompleteData[1]+";"+$Global:PanneCompleteData[2]+";"+$Global:PanneCompleteData[3]+";"+$Global:PanneCompleteData[4] -Force
+            Add-Content -Path $Global:PanneCSV -Value "`r" -Force
+            Add-Content -Path $Global:PanneCSV -Value ($Global:PanneCompleteData[0].ToString()+";"+$Global:PanneCompleteData[1].ToString()+";"+$Global:PanneCompleteData[2].ToString()+";"+$Global:PanneCompleteData[3].ToString()+";"+$Global:PanneCompleteData[4].ToString()) -Force
         }
 
     }
@@ -68,8 +68,8 @@ if ($Global:PanneDetectedVar -eq $false)
     $Global:PanneCompleteData = @($Global:PanneID,$Global:PanneStartTime,$Global:PanneEndETATime,$Global:PanneStatusString,$Global:PanneRaisonString)
     Copy-Item -Path './outages/template.csv' -Destination "./outages/$Global:currentFileTime.csv" -Force
     $Global:PanneCSV = Get-Item -Path "./outages/$Global:currentFileTime.csv"
-    Add-Content -Path $Global:PanneCSV -Value "`r`n" -Force
-    Add-Content -Path $Global:PanneCSV -Value ("Pas de panne en cours pour OS4MTL"+";"+""+";"+""+";"+""+";"+"") -Force
+    Add-Content -Path $Global:PanneCSV -Value "`r" -Force
+    Add-Content -Path $Global:PanneCSV -Value ('Pas de panne en cours pour OS4MTL'+";"+'N/A'+";"+'N/A'+";"+'N/A'+";"+'N/A') -Force
 }
 Write-Output $Global:PanneCompleteData
 Write-Output $Global:PanneCompleteDataCSV
