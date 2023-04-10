@@ -14,7 +14,7 @@ $Global:PanneRaisonsAnimal = @(52, 53)
 
 $Global:HydroTimeStampVar = (Invoke-WebRequest -Uri 'http://pannes.hydroquebec.com/pannes/donnees/v3_0/bisversion.json').Content.ToString()
 $Global:HydroTimeStampVar = $Global:HydroTimeStampVar.Replace('"','')
-$Global:HydroDataRequestURL = ("http://pannes.hydroquebec.com/pannes/donnees/v3_0/bismarkers" + "Global:$HydroTimeStampVar" + ".json")
+$Global:HydroDataRequestURL = ("http://pannes.hydroquebec.com/pannes/donnees/v3_0/bismarkers" + "$Global:HydroTimeStampVar" + ".json")
 
 $Global:HydroDataRequest = (Invoke-WebRequest -Uri $Global:HydroDataRequestURL)
 $Global:HydroData = ConvertFrom-Json -InputObject $Global:HydroDataRequest.Content
@@ -22,18 +22,18 @@ $Global:HydroData = ConvertFrom-Json -InputObject $Global:HydroDataRequest.Conte
 $Global:OS4Latitude = "45.55036533571045"
 $Global:OS4Longitude = "-73.63072068425883"
 
-foreach ($Panne in $Global:HydroData.pannes)
+foreach ($Global:Panne in $Global:HydroData.pannes)
 {
-    if (($Panne[4] -like "$Global:OS4Latitude") -and ($Panne[4] -like "$Global:OS4Longitude"))
+    if (($Global:Panne[4] -contains "$Global:OS4Latitude") -and ($Global:Panne[4] -contains "$Global:OS4Longitude"))
     {
 
-        if ($Panne[3] -is 'P')
+        if ($Global:Panne[3] -is 'P')
         {
-            $Global:PanneID = $Panne[9]
-            $Global:PanneStartTime = $Panne[1]
-            $Global:PanneEndETATime = $Panne[2]
-            $Global:PanneStatusCode = $Panne[5]
-            $Global:PanneRaisonCode = $Panne[7]
+            $Global:PanneID = $Global:Panne[9]
+            $Global:PanneStartTime = $Global:Panne[1]
+            $Global:PanneEndETATime = $Global:Panne[2]
+            $Global:PanneStatusCode = $Global:Panne[5]
+            $Global:PanneRaisonCode = $Global:Panne[7]
 
             switch ($Global:PanneStatusCode) {
                 ($_ -like $Global:PanneStatutNew) { $Global:PanneStatusString = "Nouvellement signalée" }
@@ -52,18 +52,31 @@ foreach ($Panne in $Global:HydroData.pannes)
                 Default { $Global:PanneRaisonString = "Inconnue" }
             }
 
-            $Global:PanneCompleteData = New-Object -TypeName pscustomobject -Property @{'ID Panne'=$Global:PanneID;'Date de debut'=$Global:PanneStartTime;'ETA de fin'=$Global:PanneEndETATime;'Statut actuel'=$Global:PanneStatusString;'Cause de la panne'=$Global:PanneRaisonString}
-            $Global:PanneCompleteDataCSV = ConvertTo-Csv -InputObject $Global:PanneCompleteData -Delimiter ';'
-            New-Item -Path './outages' -Name "$Global:currentFileTime.csv" -ItemType File -Value $Global:PanneCompleteDataCSV -Force
+            $Global:PanneCompleteData = @($Global:PanneID,$Global:PanneStartTime,$Global:PanneEndETATime,$Global:PanneStatusString,$Global:PanneRaisonString)
+            Copy-Item -Path './outages/template.csv' -Destination "./outages/$Global:currentFileTime.csv" -Force
+            $Global:PanneCSV = Get-Item -Path "./outages/$Global:currentFileTime.csv"
+            Add-Content -Path $Global:PanneCSV -Value "`r`n" -Force
+            Add-Content -Path $Global:PanneCSV -Value $Global:PanneCompleteData[0]+";"+$Global:PanneCompleteData[1]+";"+$Global:PanneCompleteData[2]+";"+$Global:PanneCompleteData[3]+";"+$Global:PanneCompleteData[4] -Force
         }
 
     }
-
-    else
-    {
-        $Global:PanneCompleteData = New-Object -TypeName pscustomobject -Property @{'ID Panne'='Pas de panne en cours pour OS4MTL'}
-        $Global:PanneCompleteDataCSV = ConvertTo-Csv -InputObject $Global:PanneCompleteData -Delimiter ';'
-        New-Item -Path './outages' -Name "$Global:currentFileTime.csv" -ItemType File -Value $Global:PanneCompleteDataCSV -Force
-    }
-
 }
+
+$Global:PanneDetectedVar = Test-Path Variable:PanneCompleteData
+if ($Global:PanneDetectedVar -eq $false)
+{
+    $Global:PanneCompleteData = @($Global:PanneID,$Global:PanneStartTime,$Global:PanneEndETATime,$Global:PanneStatusString,$Global:PanneRaisonString)
+    Copy-Item -Path './outages/template.csv' -Destination "./outages/$Global:currentFileTime.csv" -Force
+    $Global:PanneCSV = Get-Item -Path "./outages/$Global:currentFileTime.csv"
+    Add-Content -Path $Global:PanneCSV -Value "`r`n" -Force
+    Add-Content -Path $Global:PanneCSV -Value ("Pas de panne en cours pour OS4MTL"+";"+""+";"+""+";"+""+";"+"") -Force
+}
+Write-Output $Global:PanneCompleteData
+Write-Output $Global:PanneCompleteDataCSV
+Remove-Variable -Name PanneCompleteData -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneCSV -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneID -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneStartTime -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneEndETATime -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneStatusCode -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+Remove-Variable -Name PanneRaisonCode -Scope Global -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
