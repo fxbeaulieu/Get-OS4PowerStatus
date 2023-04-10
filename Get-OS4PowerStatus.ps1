@@ -1,6 +1,6 @@
 #!/snap/bin/powershell
 $Global:currentFileTime = (Get-Date -Format FileDateTime)
-
+Set-Location -Path $PSScriptRoot
 $Global:PanneStatutNew = 'N'
 $Global:PanneStatutAssigned = 'A'
 $Global:PanneStatutWorking = 'L'
